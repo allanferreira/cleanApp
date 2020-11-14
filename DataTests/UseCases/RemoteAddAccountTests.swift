@@ -3,14 +3,14 @@ import Domain
 import Data
 
 class RemoteAddAccountTests: XCTestCase {
-
+    
     func test_add_should_call_httpClient_with_correct_url() {
         let url = makeUrl()
         let (sut, httpClientSpy) = makeSut(url: url)
         sut.add(addAccount: makeAddAccount()) {_ in}
         XCTAssertEqual(httpClientSpy.urls, [url])
     }
-
+    
     func test_add_should_call_httpClient_with_correct_data() {
         let (sut, httpClientSpy) = makeSut()
         let addAccount = makeAddAccount()
@@ -48,15 +48,23 @@ extension RemoteAddAccountTests {
         return (sut, httpClientSpy)
     }
     
-    func expect(_ sut: RemoteAddAccount, completeWith expectedResult: Result<AccountModel, DomainError>, when action: () -> Void) {
+    func expect(
+        _ sut: RemoteAddAccount,
+        completeWith expectedResult: Result<AccountModel, DomainError>,
+        when action: () -> Void,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
         let exp = expectation(description: "waiting")
         sut.add(addAccount: makeAddAccount()) { receivedResult in
             switch (expectedResult, receivedResult) {
-            case (.failure(let expectedError), .failure(let receivedError)): XCTAssertEqual(expectedError, receivedError)
-            case (.success(let expectedAccount), .success(let receivedAccount)): XCTAssertEqual(expectedAccount, receivedAccount)
+            case (.failure(let expectedError), .failure(let receivedError)):
+                XCTAssertEqual(expectedError, receivedError, file: file, line: line)
                 
-            
-            default: XCTFail("Expected \(expectedResult) received \(receivedResult) instead")
+            case (.success(let expectedAccount), .success(let receivedAccount)):
+                XCTAssertEqual(expectedAccount, receivedAccount, file: file, line: line)
+                
+            default: XCTFail("Expected \(expectedResult) received \(receivedResult) instead", file: file, line: line)
             }
             exp.fulfill()
         }
