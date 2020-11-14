@@ -24,14 +24,28 @@ class RemoteAddAccountTests: XCTestCase {
         sut.add(addAccount: makeAddAccount()) { result in
             switch result {
             case .failure(let error): XCTAssertEqual(error, .unexpected)
-            case .success: XCTFail("Expected error receive \(result) instead")
+            case .success: XCTFail("Expected error received \(result) instead")
             }
             exp.fulfill()
         }
         httpClientSpy.completeWithError(.noConnectivity)
         wait(for: [exp], timeout: 1)
     }
-
+    
+    func test_add_should_complete_with_account_if_httpClient_completes_with_data() {
+        let (sut, httpClientSpy) = makeSut()
+        let exp = expectation(description: "waiting")
+        let expectedAccount = makeAccount()
+        sut.add(addAccount: makeAddAccount()) { result in
+            switch result {
+            case .failure: XCTFail("Expected success received \(result) instead")
+            case .success(let receivedAccount): XCTAssertEqual(receivedAccount, expectedAccount)
+            }
+            exp.fulfill()
+        }
+        httpClientSpy.completeWithData(expectedAccount.toData()!)
+        wait(for: [exp], timeout: 1)
+    }
 }
 
 extension RemoteAddAccountTests {
@@ -40,8 +54,13 @@ extension RemoteAddAccountTests {
         let sut = RemoteAddAccount(url: url, httpClient: httpClientSpy)
         return (sut, httpClientSpy)
     }
+    
     func makeAddAccount() -> AddAccountModel {
         return AddAccountModel(name: "any_name", email: "any@any.com", password: "any123", passwordConfirmation: "any123")
+    }
+    
+    func makeAccount() -> AccountModel {
+        return AccountModel(id: "any_id", name: "any_name", email: "any@any.com", password: "any123")
     }
     
     class HttpClientSpy: HttpPostClient {
@@ -57,6 +76,10 @@ extension RemoteAddAccountTests {
         
         func completeWithError(_ error: HttpError) {
             completion?(.failure(error))
+        }
+        
+        func completeWithData(_ data: Data) {
+            completion?(.success(data))
         }
     }
 }
