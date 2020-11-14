@@ -6,7 +6,7 @@ public struct AccountModel {
     public var email: String
     public var password: String
     
-    init(
+    public init(
         id: String,
         name: String,
         email: String,
