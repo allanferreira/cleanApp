@@ -11,6 +11,10 @@ func makeInvalidData() -> Data {
     return Data("any_invalid_data".utf8)
 }
 
+func makeValidData() -> Data {
+    return Data("{\"name\":\"any_username\"}".utf8)
+}
+
 func makeUrl() -> URL {
     return URL(string: "http://new-any-url.com")!
 }
